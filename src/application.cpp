@@ -32,7 +32,12 @@
 #include <QLocale>
 #include <QLibraryInfo>
 #include <QSysInfo>
+
+#ifndef DISABLE_GUI
+#ifdef Q_OS_MAC
 #include <QFont>
+#endif // Q_OS_MAC
+#endif // DISABLE_GUI
 
 #include "application.h"
 #include "preferences.h"
