@@ -32,6 +32,7 @@
 #include <QLocale>
 #include <QLibraryInfo>
 #include <QSysInfo>
+#include <QFont>
 
 #include "application.h"
 #include "preferences.h"
