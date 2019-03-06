@@ -38,7 +38,7 @@
 #include <QThread>
 #include <QTimer>
 
-#include "base/bittorrent/filepriority.h"
+#include "base/bittorrent/downloadpriority.h"
 #include "base/bittorrent/session.h"
 #include "base/preferences.h"
 #include "base/unicodestrings.h"
@@ -622,13 +622,13 @@ void PropertiesWidget::displayFilesListMenu(const QPoint &)
         renameSelectedFile();
     }
     else {
-        BitTorrent::FilePriority prio = BitTorrent::FilePriority::Normal;
+        BitTorrent::DownloadPriority prio = BitTorrent::DownloadPriority::Normal;
         if (act == m_ui->actionHigh)
-            prio = BitTorrent::FilePriority::High;
+            prio = BitTorrent::DownloadPriority::High;
         else if (act == m_ui->actionMaximum)
-            prio = BitTorrent::FilePriority::Maximum;
+            prio = BitTorrent::DownloadPriority::Maximum;
         else if (act == m_ui->actionNotDownloaded)
-            prio = BitTorrent::FilePriority::Ignored;
+            prio = BitTorrent::DownloadPriority::Ignored;
 
         qDebug("Setting files priority");
         for (const QModelIndex &index : selectedRows) {
@@ -895,11 +895,7 @@ void PropertiesWidget::editWebSeed()
 
 void PropertiesWidget::applyPriorities()
 {
-    qDebug("Saving files priorities");
-    const QVector<int> priorities = m_propListModel->model()->getFilePriorities();
-    // Prioritize the files
-    qDebug("prioritize files: %d", priorities[0]);
-    m_torrent->prioritizeFiles(priorities);
+    m_torrent->prioritizeFiles(m_propListModel->model()->getFilePriorities());
 }
 
 void PropertiesWidget::filteredFilesChanged()

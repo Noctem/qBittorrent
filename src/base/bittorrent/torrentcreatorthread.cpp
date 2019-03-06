@@ -49,6 +49,12 @@
 
 namespace
 {
+#if (LIBTORRENT_VERSION_NUM < 10200)
+    using CreateFlags = int;
+#else
+    using CreateFlags = lt::create_flags_t;
+#endif
+
     // do not include files and folders whose
     // name starts with a .
     bool fileFilter(const std::string &f)
@@ -137,7 +143,7 @@ void TorrentCreatorThread::run()
             , (m_params.isAlignmentOptimized ? libt::create_torrent::optimize : 0));
 #else
         libt::create_torrent newTorrent(fs, m_params.pieceSize, -1
-            , (m_params.isAlignmentOptimized ? libt::create_torrent::optimize_alignment : 0));
+                                        , (m_params.isAlignmentOptimized ? libt::create_torrent::optimize_alignment : CreateFlags {}));
 #endif
 
         // Add url seeds
@@ -214,6 +220,6 @@ int TorrentCreatorThread::calculateTotalPieces(const QString &inputPath, const i
         , (isAlignmentOptimized ? libt::create_torrent::optimize : 0)).num_pieces();
 #else
     return libt::create_torrent(fs, pieceSize, -1
-        , (isAlignmentOptimized ? libt::create_torrent::optimize_alignment : 0)).num_pieces();
+                                , (isAlignmentOptimized ? libt::create_torrent::optimize_alignment : CreateFlags {})).num_pieces();
 #endif
 }

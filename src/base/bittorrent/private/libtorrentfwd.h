@@ -1,6 +1,6 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2015  Vladimir Golovnev <glassez@yandex.ru>
+ * Copyright (C) 2019  Vladimir Golovnev <glassez@yandex.ru>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,52 +26,56 @@
  * exception statement from your version.
  */
 
-#ifndef BITTORRENT_TRACKERENTRY_H
-#define BITTORRENT_TRACKERENTRY_H
+#pragma once
 
-#include <libtorrent/torrent_info.hpp>
 #include <libtorrent/version.hpp>
-#if LIBTORRENT_VERSION_NUM >= 10100
-#include <libtorrent/announce_entry.hpp>
-#endif
 
-class QString;
-
-namespace BitTorrent
+#if (LIBTORRENT_VERSION_NUM < 10200)
+namespace libtorrent
 {
-    class TrackerEntry
-    {
-    public:
-        enum Status
-        {
-            NotContacted = 1,
-            Working = 2,
-            Updating = 3,
-            NotWorking = 4
-        };
+    class entry;
+    class session;
+    struct ip_filter;
+    struct settings_pack;
+    struct torrent_handle;
 
-        TrackerEntry(const QString &url);
-        TrackerEntry(const libtorrent::announce_entry &nativeEntry);
-        TrackerEntry(const TrackerEntry &other);
-
-        QString url() const;
-        int tier() const;
-        bool isWorking() const;
-        Status status() const;
-
-        void setTier(int value);
-        TrackerEntry &operator=(const TrackerEntry &other);
-        bool operator==(const TrackerEntry &other) const;
-
-        int numSeeds() const;
-        int numLeeches() const;
-        int numDownloaded() const;
-
-        libtorrent::announce_entry nativeEntry() const;
-
-    private:
-        libtorrent::announce_entry m_nativeEntry;
-    };
+    class alert;
+    struct add_torrent_alert;
+    struct external_ip_alert;
+    struct fastresume_rejected_alert;
+    struct file_completed_alert;
+    struct file_error_alert;
+    struct file_rename_failed_alert;
+    struct file_renamed_alert;
+    struct listen_failed_alert;
+    struct listen_succeeded_alert;
+    struct metadata_received_alert;
+    struct peer_ban_alert;
+    struct peer_blocked_alert;
+    struct portmap_alert;
+    struct portmap_error_alert;
+    struct save_resume_data_alert;
+    struct save_resume_data_failed_alert;
+    struct session_stats_alert;
+    struct state_update_alert;
+    struct stats_alert;
+    struct storage_moved_alert;
+    struct storage_moved_failed_alert;
+    struct torrent_alert;
+    struct torrent_checked_alert;
+    struct torrent_delete_failed_alert;
+    struct torrent_deleted_alert;
+    struct torrent_finished_alert;
+    struct torrent_paused_alert;
+    struct torrent_removed_alert;
+    struct torrent_resumed_alert;
+    struct tracker_error_alert;
+    struct tracker_reply_alert;
+    struct tracker_warning_alert;
+    struct url_seed_alert;
 }
 
-#endif // BITTORRENT_TRACKERENTRY_H
+namespace lt = libtorrent;
+#else
+#include <libtorrent/fwd.hpp>
+#endif

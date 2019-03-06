@@ -1,6 +1,6 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2015  Vladimir Golovnev <glassez@yandex.ru>
+ * Copyright (C) 2019  Vladimir Golovnev <glassez@yandex.ru>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,52 +26,40 @@
  * exception statement from your version.
  */
 
-#ifndef BITTORRENT_TRACKERENTRY_H
-#define BITTORRENT_TRACKERENTRY_H
+#pragma once
 
-#include <libtorrent/torrent_info.hpp>
-#include <libtorrent/version.hpp>
-#if LIBTORRENT_VERSION_NUM >= 10100
-#include <libtorrent/announce_entry.hpp>
+#include <vector>
+#include <QHash>
+
+#include "base/net/portforwarder.h"
+#include "libtorrentfwd.h"
+
+#if (LIBTORRENT_VERSION_NUM < 10200)
+using LTPortMapping = int;
+#else
+#include <libtorrent/portmap.hpp>
+using LTPortMapping = lt::port_mapping_t;
 #endif
 
-class QString;
-
-namespace BitTorrent
+class PortForwarderImpl : public Net::PortForwarder
 {
-    class TrackerEntry
-    {
-    public:
-        enum Status
-        {
-            NotContacted = 1,
-            Working = 2,
-            Updating = 3,
-            NotWorking = 4
-        };
+    Q_DISABLE_COPY(PortForwarderImpl)
 
-        TrackerEntry(const QString &url);
-        TrackerEntry(const libtorrent::announce_entry &nativeEntry);
-        TrackerEntry(const TrackerEntry &other);
+public:
+    explicit PortForwarderImpl(lt::session *provider, QObject *parent = nullptr);
+    ~PortForwarderImpl() override;
 
-        QString url() const;
-        int tier() const;
-        bool isWorking() const;
-        Status status() const;
+    bool isEnabled() const override;
+    void setEnabled(bool enabled) override;
 
-        void setTier(int value);
-        TrackerEntry &operator=(const TrackerEntry &other);
-        bool operator==(const TrackerEntry &other) const;
+    void addPort(quint16 port) override;
+    void deletePort(quint16 port) override;
 
-        int numSeeds() const;
-        int numLeeches() const;
-        int numDownloaded() const;
+private:
+    void start();
+    void stop();
 
-        libtorrent::announce_entry nativeEntry() const;
-
-    private:
-        libtorrent::announce_entry m_nativeEntry;
-    };
-}
-
-#endif // BITTORRENT_TRACKERENTRY_H
+    bool m_active;
+    libtorrent::session *m_provider;
+    QHash<quint16, std::vector<LTPortMapping>> m_mappedPorts;
+};

@@ -48,7 +48,7 @@
 #include <QPixmapCache>
 #endif
 
-#include "base/bittorrent/filepriority.h"
+#include "base/bittorrent/downloadpriority.h"
 #include "base/global.h"
 #include "base/utils/misc.h"
 #include "base/utils/fs.h"
@@ -237,7 +237,7 @@ void TorrentContentModel::updateFilesProgress(const QVector<qreal> &fp)
     emit dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
 
-void TorrentContentModel::updateFilesPriorities(const QVector<int> &fprio)
+void TorrentContentModel::updateFilesPriorities(const QVector<BitTorrent::DownloadPriority> &fprio)
 {
     Q_ASSERT(m_filesIndex.size() == fprio.size());
     // XXX: Why is this necessary?
@@ -246,7 +246,7 @@ void TorrentContentModel::updateFilesPriorities(const QVector<int> &fprio)
 
     emit layoutAboutToBeChanged();
     for (int i = 0; i < fprio.size(); ++i)
-        m_filesIndex[i]->setPriority(static_cast<BitTorrent::FilePriority>(fprio[i]));
+        m_filesIndex[i]->setPriority(static_cast<BitTorrent::DownloadPriority>(fprio[i]));
     emit dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
 
@@ -264,19 +264,19 @@ void TorrentContentModel::updateFilesAvailability(const QVector<qreal> &fa)
     emit dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
 
-QVector<int> TorrentContentModel::getFilePriorities() const
+QVector<BitTorrent::DownloadPriority> TorrentContentModel::getFilePriorities() const
 {
-    QVector<int> prio;
+    QVector<BitTorrent::DownloadPriority> prio;
     prio.reserve(m_filesIndex.size());
     for (const TorrentContentModelFile *file : asConst(m_filesIndex))
-        prio.push_back(static_cast<int>(file->priority()));
+        prio.push_back(file->priority());
     return prio;
 }
 
 bool TorrentContentModel::allFiltered() const
 {
     for (const TorrentContentModelFile *fileItem : asConst(m_filesIndex))
-        if (fileItem->priority() != BitTorrent::FilePriority::Ignored)
+        if (fileItem->priority() != BitTorrent::DownloadPriority::Ignored)
             return false;
     return true;
 }
@@ -298,11 +298,11 @@ bool TorrentContentModel::setData(const QModelIndex &index, const QVariant &valu
         TorrentContentModelItem *item = static_cast<TorrentContentModelItem*>(index.internalPointer());
         qDebug("setData(%s, %d", qUtf8Printable(item->name()), value.toInt());
         if (static_cast<int>(item->priority()) != value.toInt()) {
-            BitTorrent::FilePriority prio = BitTorrent::FilePriority::Normal;
+            BitTorrent::DownloadPriority prio = BitTorrent::DownloadPriority::Normal;
             if (value.toInt() == Qt::PartiallyChecked)
-                prio = BitTorrent::FilePriority::Mixed;
+                prio = BitTorrent::DownloadPriority::Mixed;
             else if (value.toInt() == Qt::Unchecked)
-                prio = BitTorrent::FilePriority::Ignored;
+                prio = BitTorrent::DownloadPriority::Ignored;
 
             item->setPriority(prio);
             // Update folders progress in the tree
@@ -322,7 +322,7 @@ bool TorrentContentModel::setData(const QModelIndex &index, const QVariant &valu
             item->setName(value.toString());
             break;
         case TorrentContentModelItem::COL_PRIO:
-            item->setPriority(static_cast<BitTorrent::FilePriority>(value.toInt()));
+            item->setPriority(static_cast<BitTorrent::DownloadPriority>(value.toInt()));
             break;
         default:
             return false;
@@ -364,9 +364,9 @@ QVariant TorrentContentModel::data(const QModelIndex &index, int role) const
     }
 
     if ((index.column() == TorrentContentModelItem::COL_NAME) && (role == Qt::CheckStateRole)) {
-        if (item->data(TorrentContentModelItem::COL_PRIO).toInt() == static_cast<int>(BitTorrent::FilePriority::Ignored))
+        if (item->data(TorrentContentModelItem::COL_PRIO).toInt() == static_cast<int>(BitTorrent::DownloadPriority::Ignored))
             return Qt::Unchecked;
-        if (item->data(TorrentContentModelItem::COL_PRIO).toInt() == static_cast<int>(BitTorrent::FilePriority::Mixed))
+        if (item->data(TorrentContentModelItem::COL_PRIO).toInt() == static_cast<int>(BitTorrent::DownloadPriority::Mixed))
             return Qt::PartiallyChecked;
         return Qt::Checked;
     }
@@ -501,8 +501,8 @@ void TorrentContentModel::selectAll()
 {
     for (int i = 0; i < m_rootItem->childCount(); ++i) {
         TorrentContentModelItem* child = m_rootItem->child(i);
-        if (child->priority() == BitTorrent::FilePriority::Ignored)
-            child->setPriority(BitTorrent::FilePriority::Normal);
+        if (child->priority() == BitTorrent::DownloadPriority::Ignored)
+            child->setPriority(BitTorrent::DownloadPriority::Normal);
     }
     emit dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
@@ -510,6 +510,6 @@ void TorrentContentModel::selectAll()
 void TorrentContentModel::selectNone()
 {
     for (int i = 0; i < m_rootItem->childCount(); ++i)
-        m_rootItem->child(i)->setPriority(BitTorrent::FilePriority::Ignored);
+        m_rootItem->child(i)->setPriority(BitTorrent::DownloadPriority::Ignored);
     emit dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
