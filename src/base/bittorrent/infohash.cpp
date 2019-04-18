@@ -41,18 +41,24 @@ InfoHash::InfoHash(const libtorrent::sha1_hash &nativeHash)
     : m_valid(true)
     , m_nativeHash(nativeHash)
 {
-    char out[(libtorrent::sha1_hash::size * 2) + 1];
-    libtorrent::to_hex(reinterpret_cast<const char*>(&m_nativeHash[0]), length(), out);
-    m_hashString = QString(out);
+    QByteArray raw = QByteArray::fromRawData(nativeHash.data(), length());
+    m_hashString = QString::fromLatin1(raw.toHex());
 }
 
 InfoHash::InfoHash(const QString &hashString)
     : m_valid(false)
     , m_hashString(hashString)
 {
-    QByteArray raw = m_hashString.toLatin1();
-    if (raw.size() == 40)
-        m_valid = libtorrent::from_hex(raw.constData(), 40, reinterpret_cast<char*>(&m_nativeHash[0]));
+    if (hashString.size() != (length() * 2))
+        return;
+
+    const QByteArray raw = QByteArray::fromHex(hashString.toLatin1());
+    if (raw.size() != length())  // QByteArray::fromHex() will skip over invalid characters
+        return;
+
+    m_valid = true;
+    m_hashString = hashString;
+    m_nativeHash.assign(raw.constData());
 }
 
 
